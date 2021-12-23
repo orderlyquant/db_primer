@@ -1,0 +1,31 @@
+---
+title: 'Database Primer in R'
+author: "Brandon Farr"
+date: 2021-12-23
+output:
+    github_document: default
+---
+
+```{r setup, include = FALSE}
+library(DBI)
+library(RSQLite)
+library(tidyverse)
+
+base_dir <- here::here("")
+db_file <- fs::path(base_dir, "SAMPLEDB")
+if(dbCanConnect(RSQLite::SQLite(), db_file)) {
+    sampledb <- dbConnect(RSQLite::SQLite(), db_file)
+}
+
+knitr::opts_chunk$set(
+    connection = "sampledb", # automatically uses this connection in sql chunks 
+    comment = "#>", 
+    collapse = TRUE, 
+    message = FALSE,
+    fig.width = 8,
+    fig.asp = ((1 + sqrt(5)) / 2) - 1, # the golden ratio - technically, the b proportion of a+b when a is 1
+    out.width = "70%",
+    fig.align = "center"
+)
+```
+
