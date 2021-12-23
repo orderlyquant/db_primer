@@ -14,6 +14,31 @@ relationship between the two tables using `PRIMARY KEY` and
 -   ensure that when an entry in `parent` is deleted, all related
     records in `child` are deleted
 
+The database schema we use is shown below.
+
+``` sql
+-- parent table
+CREATE TABLE IF NOT EXISTS parent
+(
+    uid INTEGER PRIMARY KEY,
+    parent_name TEXT NOT NULL
+);
+
+-- child table
+CREATE TABLE IF NOT EXISTS child
+(
+    parent_uid INTEGER NOT NULL,
+    child_name TEXT NOT NULL,
+    FOREIGN KEY(parent_uid)
+        REFERENCES parent(uid)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+```
+
+Take note of: `PRIMARY KEY`, `FOREIGN KEY`, `REFERENCES` and
+`ON DELETE CASCADE`.
+
 This chunk references `DROP_PARENTCHILDDB_SCHEMA.SQL` as input to clear
 the schema for new use in this script.
 
@@ -148,7 +173,7 @@ dbDisconnect(parentchilddb)
 if(dbCanConnect(RSQLite::SQLite(), db_file)) {
     parentchilddb <- dbConnect(RSQLite::SQLite(), db_file)
     
-    # insure foreign keys are enforced
+    # ensure foreign keys are enforced
     rs <- dbSendStatement(parentchilddb, "PRAGMA foreign_keys = ON;")
     dbHasCompleted(rs)
     dbClearResult(rs)
@@ -241,7 +266,7 @@ db_select_data(parentchilddb, "SELECT * FROM child;")
 
 ### Cascading DELETEs
 
-A key scenario to test for when determining database integrity is the
+A key scenario to test when determining database integrity is the
 deletion of children records related to a deleted parent. Does `sqlite3`
 accomplish this? Let’s try removing `Jacob` and see what happens.
 
@@ -260,11 +285,6 @@ safe_dbSendStatement(
 #> 
 #> $error
 #> NULL
-# if(dbHasCompleted(res)) {
-#     dbGetRowsAffected(res)
-# }
-# dbClearResult(res)
-
 
 db_select_data(parentchilddb, "SELECT * from parent;")
 #> Warning: Closing open result set, pending rows
@@ -280,6 +300,8 @@ db_select_data(parentchilddb, "SELECT * from child;")
 #> 1          1 Cain      
 #> 2          1 Abel
 ```
+
+It looks like cascading deletes were enforced.
 
 ## Summary
 
@@ -309,7 +331,7 @@ CREATE TABLE IF NOT EXISTS child
 if(dbCanConnect(RSQLite::SQLite(), db_file)) {
     parentchilddb <- dbConnect(RSQLite::SQLite(), db_file)
     
-    # insure foreign keys are enforced
+    # ensure foreign keys are enforced
     rs <- dbSendStatement(parentchilddb, "PRAGMA foreign_keys = ON;")
     dbHasCompleted(rs)
     dbClearResult(rs)

@@ -31,6 +31,33 @@ between the two tables using `PRIMARY KEY` and `FOREIGN KEY` to:
 - ensure all entries in `child` relate to an **existing** record in `parent`
 - ensure that when an entry in `parent` is deleted, all related records in
   `child` are deleted
+  
+The database schema we use is shown below.
+
+```{sql eval = FALSE}
+
+-- parent table
+CREATE TABLE IF NOT EXISTS parent
+(
+    uid INTEGER PRIMARY KEY,
+    parent_name TEXT NOT NULL
+);
+
+-- child table
+CREATE TABLE IF NOT EXISTS child
+(
+    parent_uid INTEGER NOT NULL,
+    child_name TEXT NOT NULL,
+    FOREIGN KEY(parent_uid)
+        REFERENCES parent(uid)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+```
+
+Take note of: `PRIMARY KEY`, `FOREIGN KEY`, `REFERENCES` and
+`ON DELETE CASCADE`.
 
 This chunk references `DROP_PARENTCHILDDB_SCHEMA.SQL` as input to clear the
 schema for new use in this script.
@@ -218,7 +245,7 @@ db_select_data(parentchilddb, "SELECT * FROM child;")
 
 ### Cascading DELETEs
 
-A key scenario to test for when determining database integrity is
+A key scenario to test when determining database integrity is
 the deletion of children records related to a deleted parent. Does
 `sqlite3` accomplish this? Let's try removing `Jacob` and see what
 happens.
@@ -231,17 +258,14 @@ safe_dbSendStatement(
     parentchilddb,
     "DELETE FROM parent WHERE parent_name = 'Jacob'"
 )
-# if(dbHasCompleted(res)) {
-#     dbGetRowsAffected(res)
-# }
-# dbClearResult(res)
-
 
 db_select_data(parentchilddb, "SELECT * from parent;")
 
 db_select_data(parentchilddb, "SELECT * from child;")
 
 ```
+
+It looks like cascading deletes were enforced.
 
 ## Summary
 
